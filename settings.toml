@@ -1,0 +1,50 @@
+a = 0.7
+b = 0.8
+S = 0.45
+tau1 = 0.08
+tau2 = 3.1
+tau3 = 1.15
+V_inh = -1.5
+V_ex = 1.5
+k_systems = 4
+tMax = 500
+G_ex = 0.0
+G_inh = 0.0
+highAccuracy = false
+z1_IC = 0.01
+z2_IC = 0
+plot_styles = [
+    "--",
+    "-.",
+    "--",
+    "dotted",
+    "-.",
+    "--",
+    "dotted",
+]
+scatter_markers = [
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+]
+plot_colors = [
+    "blue",
+    "orange",
+    "green",
+    "red",
+    "indigo",
+    "m",
+    "yellow",
+]
+save_IC_data_path = "/Data/initial_conditions/"
+path_Doc = "./Data/results/protazhka_IC_3.docx"
+Graphic_data_path = "./Data/graphics/fig"
+pathIC = "./Data/graphics/IC"
+path_LS = "./Data/graphics/finalState"
+FHN_tr_path = "./Data/FHW_coords.txt"
+pathIC_test = "./Data/graphics/savedIC_test.png"
