@@ -3,32 +3,42 @@ from scipy.integrate import solve_ivp
 from matplotlib import pyplot as plt
 import numpy as np
 import time
-from random import random, randint
+from random import randint, uniform
 
 # Два глобальных параметра
 G_inh = 0
 tMax = 0
+
+# Start params
+a = s.a
+b = s.b
+S = s.S
+tau1 = s.tau1
+tau2 = s.tau2
+tau3 = s.tau3
+V_inh = s.V_inh
+V_ex = s.V_ex
+k_systems = s.k_systems
+k = s.k
+G_ex = s.G_ex
+
 
 def naguma_systems(t, r):
     global G_inh
 
     # For make g_ex = array(0)
     # and g_inh = full graph with value G_inh in all
-    g_ex = []
     g_inh = []
-    for i in range(0, s.k_systems):
-        g_ex.append([])
+    for i in range(0, k_systems):
         g_inh.append([])
-        for j in range(0, s.k_systems):
+        for j in range(0, k_systems):
             if j == i:
                 g_inh[i].append(0.0)
-                g_ex[i].append(0.0)
             else:
-                g_inh[i].append(s.G_inh)
-                g_ex[i].append(s.G_ex)
+                g_inh[i].append(G_inh)
 
     res_arr = []
-    for i in range(0, s.k_systems):
+    for i in range(0, k_systems):
 
         #
         # x_i = r[i*k]
@@ -37,21 +47,16 @@ def naguma_systems(t, r):
         # z2_i = r[i*k + 3]
 
         # append fx
-        res_arr.append((r[i * s.k] - r[i * s.k] ** 3 / 3.0 - r[i * s.k + 1] - r[i * s.k + 2] * (r[i * s.k] - s.V_inh) - r[
-            i * s.k + 3] * (r[i * s.k] - s.V_ex) + s.S) / s.tau1)
+        res_arr.append((r[i * k] - r[i * k] ** 3 / 3.0 - r[i * k + 1] - r[i * k + 2] * (r[i * k] - V_inh) + S) / tau1)
         # append fy
-        res_arr.append(r[i * s.k] - s.b * r[i * s.k + 1] + s.a)
+        res_arr.append(r[i * k] - b * r[i * k + 1] + a)
 
         # sum fz
         sum_Fz1 = 0.0
-        sum_Fz2 = 0.0
-        for n in range(0, s.k_systems):
-            sum_Fz1 += g_inh[i][n] * np.heaviside(r[s.k * n], 0.0)
-            sum_Fz2 += g_ex[i][n] * np.heaviside(r[s.k * n], 0.0)
+        for n in range(0, k_systems):
+            sum_Fz1 += g_inh[i][n] * np.heaviside(r[k * n], 0.0)
         # append fz1
-        res_arr.append((sum_Fz1 - r[i * s.k + 2]) / s.tau2)
-        # append fz2
-        res_arr.append((sum_Fz2 - r[i * s.k + 3]) / s.tau3)
+        res_arr.append((sum_Fz1 - r[i * k + 2]) / tau2)
 
     return res_arr
 
@@ -59,8 +64,7 @@ def naguma_systems(t, r):
 def solve(initial_conditions):
     global G_inh, tMax
 
-    startTime = time.time()
-
+    start_time = time.time()
     sol = 0
     if s.highAccuracy:
         sol = solve_ivp(naguma_systems, [0, tMax], initial_conditions, rtol=1e-11, atol=1e-11)
@@ -69,17 +73,15 @@ def solve(initial_conditions):
     xs = []
     ys = []
     z1s = []
-    z2s = []
 
     ts = sol.t
 
-    for i in range(0, s.k_systems):
-        xs.append(sol.y[i * s.k])
-        ys.append(sol.y[i * s.k + 1])
-        z1s.append(sol.y[i * s.k + 2])
-        z2s.append(sol.y[i * s.k + 3])
+    for i in range(0, k_systems):
+        xs.append(sol.y[i * k])
+        ys.append(sol.y[i * k + 1])
+        z1s.append(sol.y[i * k + 2])
 
-    print('g_inh: ', s.G_inh, '\t solve time: ', time.time() - startTime)
+    print('g_inh: ', G_inh, '\t solve time: ', time.time() - start_time)
     return xs, ys, ts
 
 
@@ -145,7 +147,7 @@ def find_order_param(period, delays):
     sum_im = 0.0
     sum_re2 = 0.0
     sum_im2 = 0.0
-    for i in range(0, s.k_systems - 1):
+    for i in range(0, k_systems - 1):
         in_exp = 2 * np.pi * delays[i] / period
         in_exp2 = 4 * np.pi * delays[i] / period
         sum_re += np.cos(in_exp)
@@ -159,23 +161,22 @@ def find_order_param(period, delays):
     sum_re2 += 1.0
     sum = np.sqrt(sum_re ** 2 + sum_im ** 2)
     sum2 = np.sqrt(sum_re2 ** 2 + sum_im2 ** 2)
-    r2 = sum2 / s.k_systems
-    r = sum / s.k_systems
+    r2 = sum2 / k_systems
+    r = sum / k_systems
     return r, r2
 
 
 def IC_random_generator(a, b):
     random_var = []
-    for i in range(0, 2 * s.k_systems):
-        random_var.append(random.uniform(a, b))
+    for i in range(0, 2 * k_systems):
+        random_var.append(uniform(a, b))
     IC_arr = []
 
     #print('Random IC:')
-    for i in range(0, s.k_systems):
+    for i in range(0, k_systems):
         IC_arr.append(random_var[i])
         IC_arr.append(random_var[i+1])
         IC_arr.append(s.z1_IC)
-        IC_arr.append(s.z2_IC)
     return np.array(IC_arr)
 
 
@@ -186,8 +187,8 @@ def showInitialConditions(IC, name='0'):
     else:
         print(name)
 
-    for i in range(0, s.k_systems):
-        print(str(IC[i*s.k]) + ', ' + str(IC[i*s.k+1]) + ', ' + str(IC[i*s.k+2]) + ', ' + str(IC[i*s.k+3]) + ',')
+    for i in range(0, k_systems):
+        print(str(IC[i*k]) + ', ' + str(IC[i*k+1]) + ', ' + str(IC[i*k+2]) + ', ')
 
 
 # Делает solve, рисует x(t) и сохраняет начальные значения в
@@ -214,20 +215,20 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
         short_ts_end = []
         short_xs_start = []
         short_ts_start = []
-        for k in range(0, s.k_systems):
+        for j in range(0, k_systems):
             short_xs_end.append([])
             short_xs_start.append([])
         for i in range(0, new_len):
-            for k in range(0, s.k_systems):
-                short_xs_end[k].append(xs[k][-new_len + i])
-                short_xs_start[k].append(xs[k][i])
+            for j in range(0, k_systems):
+                short_xs_end[j].append(xs[j][-new_len + i])
+                short_xs_start[j].append(xs[j][i])
             short_ts_end.append(ts[-new_len + i])
             short_ts_start.append(ts[i])
 
         # Осцилограмма на первых точках
         plt.figure(figsize=(15, 5))
         plt.subplots_adjust(**margins)
-        for i in range(0, s.k_systems):
+        for i in range(0, k_systems):
             plt.plot(short_ts_start, short_xs_start[i],
                      label=('eq' + str(i + 1)), linestyle=s.plot_styles[i], color=s.plot_colors[i])
             plt.legend()
@@ -246,7 +247,7 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
         # Осцилограмма на последних точках
         plt.figure(figsize=(15, 5))
         plt.subplots_adjust(**margins)
-        for i in range(0, s.k_systems):
+        for i in range(0, k_systems):
             plt.plot(short_ts_end, short_xs_end[i],
                 label=('eq' + str(i + 1)), linestyle=s.plot_styles[i], color=s.plot_colors[i])
             plt.legend()
@@ -265,7 +266,7 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
 
     # Полная осцилограмма
     # plt.figure(figsize=(30, 5))
-    # for i in range(0, s.k_systems):
+    # for i in range(0, k_systems):
     #     plt.plot(ts, xs[i], label=('eq' + str(i + 1)), linestyle=s.plot_styles[i])
     #     plt.legend()
     # plt.xlabel('t')
@@ -281,7 +282,7 @@ def recordICAndR(filename, R, IC, G_inh_arr, size):
     # IC - двумерный массив
     # R - двумерный массив
     f = open(filename, 'w')
-    f.write(str(s.k_systems))
+    f.write(str(k_systems))
     f.write('\n')
     f.write(str(size))
     f.write('\n')
@@ -317,7 +318,7 @@ def make_FHN_tr(path):
         G_inh = 0.02
         # Запоминаем k_systems на всякий случай
         k_systems_temp = s.k_systems
-        s.k_systems = 1
+        k_systems = 1
 
         IC_1_el = np.array([1., 1., 0.01, 0])
         sol = solve_ivp(naguma_systems, [0, 15], IC_1_el, rtol=1e-11, atol=1e-11)
@@ -352,7 +353,7 @@ def make_FHN_tr(path):
                 print(short_xs[i], short_ys[i], file=f)
 
         # Возвращаем старый k_systems
-        s.k_systems = k_systems_temp
+        k_systems = k_systems_temp
         return short_xs, short_ys, short_ts, size
 
     else:
@@ -383,7 +384,7 @@ def IC_FHN_random_generator(path, do_need_show=False, pathSave='0'):
 
     IC = []
     xs, ys, size = read_FHN_coords_tr(path)
-    for i in range(s.k_systems):
+    for i in range(k_systems):
         # Рандомим координаты с ФХН
         randIndex = randint(0, len(xs)-1)
         x = xs[randIndex]
@@ -393,15 +394,14 @@ def IC_FHN_random_generator(path, do_need_show=False, pathSave='0'):
         IC.append(x)
         IC.append(y)
         IC.append(s.z1_IC)
-        IC.append(s.z2_IC)
 
     #plot_IC_unit_circle(IC, pathIC)
 
     # Рисуем НУ на траектории ФХН
     if do_need_show or pathSave != '0':
         plt.plot(xs, ys)
-        for i in range(s.k_systems):
-            plt.scatter(IC[i * s.k], IC[i * s.k + 1], 150, label=str(i + 1))
+        for i in range(k_systems):
+            plt.scatter(IC[i * k], IC[i * k + 1], 150, label=str(i + 1))
         plt.legend()
         plt.grid()
 
@@ -439,8 +439,8 @@ def plot_IC_FHN(IC, pathIC=0, pathFHN=s.FHN_tr_path, text = '0'):
     xs, ys, size = read_FHN_coords_tr(pathFHN)
 
     plt.plot(xs, ys)
-    for i in range(s.k_systems):
-        plt.scatter(IC[i*s.k], IC[i*s.k+1], 150, label=str(i+1))
+    for i in range(k_systems):
+        plt.scatter(IC[i*k], IC[i*k+1], 150, label=str(i+1))
     plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
@@ -461,9 +461,9 @@ def plot_IC_FHN(IC, pathIC=0, pathFHN=s.FHN_tr_path, text = '0'):
 def plot_IC_unit_circle(IC, pathIC=0):
     #fig, ax = plt.subplots(figsize=(5, 5))
     plt.Circle((0, 0), 1, fill=False)
-    for i in range(s.k_systems):
-        x = IC[i*s.k]
-        y = IC[i*s.k + 1]
+    for i in range(k_systems):
+        x = IC[i*k]
+        y = IC[i*k + 1]
         x, y = coords_to_unit_circle(x, y)
         plt.scatter(x, y, 150, label=str(i+1))
 
@@ -491,7 +491,7 @@ def plot_last_coords_unit_circle(delays, period, path_coords=0, do_need_show=Fal
     plt.scatter(1.0, 0, 150, label=str(1))
 
     # Обходим каждый элемент
-    for i in range(s.k_systems - 1):
+    for i in range(k_systems - 1):
         # Угол i-го элемента
         phi_i = 2 * np.pi * delays[i] / period
 
@@ -519,17 +519,17 @@ def plot_last_coords_unit_circle(delays, period, path_coords=0, do_need_show=Fal
 
 
 def generate_your_IC_FHN(arr_indexes_IC, pathIC=0, do_need_show=False):
-    if len(arr_indexes_IC) != s.k_systems:
+    if len(arr_indexes_IC) != k_systems:
         return 0
     xs, ys, size = read_FHN_coords_tr()
 
-    for i in range(s.k_systems):
+    for i in range(k_systems):
         if arr_indexes_IC[i] >= size or arr_indexes_IC[i] <= -size:
             return 0
 
     IC = []
     plt.plot(xs, ys)
-    for i in range(s.k_systems):
+    for i in range(k_systems):
         x = xs[arr_indexes_IC[i]]
         y = ys[arr_indexes_IC[i]]
         plt.scatter(x, y, 200, label=str(i+1), marker=s.scatter_markers[i])
@@ -537,7 +537,6 @@ def generate_your_IC_FHN(arr_indexes_IC, pathIC=0, do_need_show=False):
         IC.append(x)
         IC.append(y)
         IC.append(s.z1_IC)
-        IC.append(s.z2_IC)
 
     plt.xlabel('x')
     plt.ylabel('y')
@@ -569,9 +568,9 @@ def write_IC(fName, IC):
     file_path = path + fName
 
     f = open(file_path, 'w')
-    for i in range(int(len(IC) / s.k)):
-        f.write(str(IC[i*s.k]) + ',' + str(IC[i*s.k + 1]) + ',' +
-                str(IC[i*s.k+2]) + ',' + str(IC[i*s.k + 3]) + '\n')
+    for i in range(int(len(IC) / k)):
+        f.write(str(IC[i*k]) + ',' + str(IC[i*k + 1]) + ',' +
+                str(IC[i*k+2]) + ',' + '\n')
     f.close()
 
     return 0
@@ -594,6 +593,9 @@ def read_IC(fName):
 
     return IC
 
+
+
+
 ################################################### make function ######################################################
 
 
@@ -606,6 +608,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
 
     tMax = tMax_
     s.highAccuracy = high_accuracy_
+    k_systems = s.k_systems
 
     xs, ys, ts = solve_and_plot_with_IC(IC, path_graph_x_start, path_graph_x_end, do_need_show)
 
@@ -613,21 +616,21 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     # Трехмерный массив - 1) Номер нейрона; 2) Информация:
     # 1 - координата максимума, 2 - время максимума, 3 - индекс максимума
     inform_about_maximums = []
-    for i in range(0, s.k_systems):
+    for i in range(0, k_systems):
         inform_about_maximums.append(find_maximums(xs[i], ts))
         # print('maximums ' + str(i) + ': ' + str(inform_about_maximums[i][1]))
 
     # Теперь нужно рассмотреть, не подавлен ли какой элемент
     depressed_elements = []     # список подавленных элементов
     nondepressed_elem = 0
-    for i in range(s.k_systems):
+    for i in range(k_systems):
         if len(inform_about_maximums[i][0]) < 10:
             depressed_elements.append(i)
         else:
             nondepressed_elem = i
 
     # Если подавлены все кроме одного, возвращаем R1,2 = 1 и заканчиваем
-    if len(depressed_elements) == s.k_systems - 1:
+    if len(depressed_elements) == k_systems - 1:
         plt.figure()
         len_R = len(inform_about_maximums[nondepressed_elem][2])-2
         R1_arr = np.ones(len_R)
@@ -655,8 +658,8 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         xs_no_depressed.pop(i)
     # 2) Меняем k_systems, потому что он используется во множестве функций и
     #  с ним должны быть связаны размеры xs и прочие
-    k_systems_with_depressed = s.k_systems
-    s.k_systems -= len(depressed_elements)
+    k_systems_with_depressed = k_systems
+    k_systems -= len(depressed_elements)
     # 2) пересчитываем inform_about_maximums
     inform_about_maximums = []
     for i in range(0, len(xs_no_depressed)):
@@ -671,7 +674,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     for j in range(10, len(inform_about_maximums[0][2]) - 2):
         delay_in_for = []
         delay_t = []
-        for i in range(1, s.k_systems):
+        for i in range(1, k_systems):
             # Находим период на текущем шаге
             period, i_period = find_period_i(inform_about_maximums[0], j)
 
@@ -681,7 +684,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
             delay_in_for.append(d)
             delay_t.append(d_t)
 
-        for i in range(0, s.k_systems - 1):
+        for i in range(0, k_systems - 1):
             if abs(delay_in_for[i]) > period:
                 if delay_in_for[i] > period:
                     delay_in_for[i] -= period
@@ -723,11 +726,10 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
 
     # Необходимо сохранить конечное состояние системы для вывода конечного графика
     last_state = []
-    for i in range(s.k_systems):
+    for i in range(k_systems):
         last_state.append(xs[i][-1])
         last_state.append(ys[i][-1])
         last_state.append(s.z1_IC)
-        last_state.append(s.z2_IC)
 
     if path_graph_last_state != 0:
         plot_last_coords_unit_circle(delay[-1], period, path_graph_last_state)
