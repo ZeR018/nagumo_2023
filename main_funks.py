@@ -435,15 +435,17 @@ def read_FHN_coords_tr(path=s.FHN_tr_path):
     return xs, ys, size
 
 
-def plot_IC_FHN(IC, pathIC=0, pathFHN=s.FHN_tr_path, text = '0'):
+def plot_IC_FHN(IC, pathIC=0, pathFHN=s.FHN_tr_path, text='0',
+                do_need_show=True):
     xs, ys, size = read_FHN_coords_tr(pathFHN)
 
     plt.plot(xs, ys)
-    for i in range(k_systems):
-        plt.scatter(IC[i*k], IC[i*k+1], 150, label=str(i+1))
+    for i in range(s.k_systems):
+        plt.scatter(IC[i*k], IC[i*k+1], 150, label=str(i+1), marker=s.scatter_markers[i])
     plt.legend()
     plt.xlabel('x')
     plt.ylabel('y')
+    plt.grid()
 
     if text != '0':
         plt.title(text)
@@ -451,8 +453,8 @@ def plot_IC_FHN(IC, pathIC=0, pathFHN=s.FHN_tr_path, text = '0'):
     if pathIC != 0:
         plt.savefig(pathIC)
 
-    plt.grid()
-    plt.show()
+    if do_need_show:
+        plt.show()
     plt.close()
     return 0
 
@@ -519,11 +521,12 @@ def plot_last_coords_unit_circle(delays, period, path_coords=0, do_need_show=Fal
 
 
 def generate_your_IC_FHN(arr_indexes_IC, pathIC=0, do_need_show=False):
-    if len(arr_indexes_IC) != k_systems:
+    if len(arr_indexes_IC) != s.k_systems:
+        print('error in generate IC:  len(indexes) = ' + str(len(arr_indexes_IC)) + ', k_systems = ' + str(s.k_systems) )
         return 0
     xs, ys, size = read_FHN_coords_tr()
 
-    for i in range(k_systems):
+    for i in range(s.k_systems):
         if arr_indexes_IC[i] >= size or arr_indexes_IC[i] <= -size:
             return 0
 
@@ -594,7 +597,26 @@ def read_IC(fName):
     return IC
 
 
+def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
+                          do_need_show=False):
+    left_elems = 0
+    right_elems = 339
+    IC_ind_arr = []
 
+    if type == 'prot':
+        k2 = s.k_systems // 2
+        for i in range(0, k2):
+            IC_ind_arr.append(left_elems - dist_between_neurons * k2 // 2 + dist_between_neurons * i)
+            IC_ind_arr.append(right_elems - dist_between_neurons * k2 // 2 + dist_between_neurons * i)
+
+        if s.k_systems % 2 == 1:
+            IC_ind_arr.append((right_elems - left_elems) // 2)
+
+    else:
+        for i in range(0, s.k_systems):
+            IC_ind_arr.append(left_elems - dist_between_neurons * s.k_systems // 2 + dist_between_neurons * i)
+
+    return generate_your_IC_FHN(IC_ind_arr, do_need_show=do_need_show)
 
 ################################################### make function ######################################################
 

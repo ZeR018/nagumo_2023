@@ -6,7 +6,6 @@ tau2 = 3.1
 tau3 = 1.15
 V_inh = -1.5
 V_ex = 1.5
-k_systems = 6   # num systems
 k = 3           # num equels in one system (one neuron model)
 tMax = 500
 G_ex = 0.0
@@ -14,6 +13,11 @@ G_inh = 0.0
 highAccuracy = false
 z1_IC = 0.01
 z2_IC = 0
+
+tMax1 = 25000
+tMax2 = 10000
+tMax3 = 8000
+
 plot_styles = [
     "--",
     "-.",
@@ -25,6 +29,8 @@ plot_styles = [
     "-.",
     "--",
     "dotted",
+    "--",
+    "-.",
 ]
 scatter_markers = [
     4,
@@ -36,7 +42,13 @@ scatter_markers = [
     10,
     11,
     4,
-    5
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
 ]
 plot_colors = [
     "blue",
@@ -49,18 +61,25 @@ plot_colors = [
     "purple",
     "gray",
     "olive",
-    "pink"
+    "pink",
+    "black",
+    "salmon",
+    "tomato",
+    "navy",
+    "gold",
+    "lime",
+    "orchid",
 ]
 save_IC_data_path = "/Data/initial_conditions/"
 Graphic_data_path = "./Data/graphics/fig"
-pathIC = "./Data/graphics/IC"
+pathIC = "./Data/graphics/IC.png"
 path_LS = "./Data/graphics/finalState"
 FHN_tr_path = "./Data/FHN_coords.txt"
 pathIC_test = "./Data/graphics/savedIC_test.png"
-path_Doc = "./Data/results/R_depend_Ginh_6elems.docx"
+path_Doc = "./Data/results/R_depend_Ginh_pos_10.docx"
 
 #for graph R(G_inh) funk
-graph_R_Ginh_path = './Data/graphics/saved_fig_R_Ginh.png'
-
+graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pos_10.png'
+k_systems = 10   # num systems
 n_streams = 10
 
