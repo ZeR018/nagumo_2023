@@ -79,6 +79,7 @@ pathIC_test = "./Data/graphics/savedIC_test.png"
 path_Doc = "./Data/results/R_depend_Ginh_pos_4.docx"
 
 #for graph R(G_inh) funk
+dist_between_neurons_IC = 1
 G_inh_sign = 1 # -1 отрицательная связь, 1 положительная
 graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pos_4.png'
 k_systems = 4   # num systems
