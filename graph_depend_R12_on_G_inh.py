@@ -16,12 +16,20 @@ def ex_Ginh_f(index, IC, do_need_show=False):
     #G_inh = -0.045
 
     # При маленьких значениях параметра связи берем большое время интегрирования
-    if G_inh >= s.G_inh_sign * 0.01:
-        tMax = s.tMax1
-    elif G_inh >= s.G_inh_sign * 0.02:
-        tMax = s.tMax2
+    if s.G_inh_sign < 0:
+        if G_inh >= s.G_inh_sign * 0.01:
+            tMax = s.tMax1
+        elif G_inh >= s.G_inh_sign * 0.02:
+            tMax = s.tMax2
+        else:
+            tMax = s.tMax3
     else:
-        tMax = s.tMax3
+        if G_inh <= s.G_inh_sign * 0.01:
+            tMax = s.tMax1
+        elif G_inh <= s.G_inh_sign * 0.02:
+            tMax = s.tMax2
+        else:
+            tMax = s.tMax3
 
     print('Experiment ' + str(index), 'tMax ' + str(tMax))
     R1_arr, R2_arr, IC, depressed_elements, last_state = m.\
