@@ -16,9 +16,9 @@ def ex_Ginh_f(index, IC, do_need_show=False):
     #G_inh = -0.045
 
     # При маленьких значениях параметра связи берем большое время интегрирования
-    if G_inh >= - 0.01:
+    if G_inh >= s.G_inh_sign * 0.01:
         tMax = s.tMax1
-    elif G_inh >= - 0.02:
+    elif G_inh >= s.G_inh_sign * 0.02:
         tMax = s.tMax2
     else:
         tMax = s.tMax3
