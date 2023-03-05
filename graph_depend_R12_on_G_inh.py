@@ -12,7 +12,7 @@ def ex_Ginh_f(index, IC, do_need_show=False):
     path_x = s.Graphic_data_path + '_x' + str(index) + '.png'
     path_R = s.Graphic_data_path + '_R' + str(index) + '.png'
 
-    G_inh = index / 1000.0
+    G_inh = s.G_inh_sign * index / 1000.0
     #G_inh = -0.045
 
     # При маленьких значениях параметра связи берем большое время интегрирования
@@ -48,7 +48,7 @@ def make_R12_dep_G_inh_experiment():
     mydoc = docx.Document()
 
     # Делаем НУ, которые будут одинаковы во всех экспериментах
-    IC = m.generate_IC_any_sizes()
+    IC = m.generate_IC_any_sizes(dist_between_neurons=s.dist_between_neurons_IC)
     m.plot_IC_FHN(IC, s.pathIC, text='Начальные условия')
 
     mydoc.add_heading("Initial conditions:", 2)
@@ -58,7 +58,12 @@ def make_R12_dep_G_inh_experiment():
     mydoc.add_picture(s.pathIC)
     mydoc.add_page_break()
 
-    for i in range(0, 8):
+
+    if s.n_streams == 20:
+        range_param = 4
+    if s.n_streams == 10:
+        range_param = 8
+    for i in range(0, range_param):
         loop_index = i * s.n_streams + 1
         # 0.135 - крайнее значение ингибиторной связи
 
@@ -110,8 +115,12 @@ def make_R12_dep_G_inh_experiment():
     plt.title('Зависимость R\u2081, R\u2082 от G_inh, ' + str(s.k_systems) + ' элементов')
     plt.legend()
     plt.grid()
-    plt.xlim(-0.09, 0.01)
+
     plt.ylim(-0.05, 1.05)
+    if s.G_inh_sign < 0:
+        plt.xlim(-0.09, 0.01)
+    else:
+        plt.xlim(-0.01, 0.09)
     plt.savefig(s.graph_R_Ginh_path)
     plt.show()
     # Добавляем этот график в док

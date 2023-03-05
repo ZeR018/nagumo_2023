@@ -76,10 +76,12 @@ pathIC = "./Data/graphics/IC.png"
 path_LS = "./Data/graphics/finalState"
 FHN_tr_path = "./Data/FHN_coords.txt"
 pathIC_test = "./Data/graphics/savedIC_test.png"
-path_Doc = "./Data/results/R_depend_Ginh_pos_10.docx"
+path_Doc = "./Data/results/R_depend_Ginh_pos_6.docx"
 
 #for graph R(G_inh) funk
-graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pos_10.png'
-k_systems = 10   # num systems
+dist_between_neurons_IC = 10
+G_inh_sign = 1 # -1 отрицательная связь, 1 положительная
+graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pos_6.png'
+k_systems = 6   # num systems
 n_streams = 10
 
