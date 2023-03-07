@@ -142,12 +142,12 @@ def lag_between_neurons(main_t, main_i, other_t, other_i, period, index=3):
 
 
 # Подсчет параметра порядка
-def find_order_param(period, delays):
+def find_order_param(period, delays, k_systems_):
     sum_re = 0.0
     sum_im = 0.0
     sum_re2 = 0.0
     sum_im2 = 0.0
-    for i in range(0, k_systems - 1):
+    for i in range(0, k_systems_ - 1):
         in_exp = 2 * np.pi * delays[i] / period
         in_exp2 = 4 * np.pi * delays[i] / period
         sum_re += np.cos(in_exp)
@@ -436,7 +436,7 @@ def read_FHN_coords_tr(path=s.FHN_tr_path):
 
 
 def plot_IC_FHN(IC, pathIC=0, pathFHN=s.FHN_tr_path, text='0',
-                do_need_show=True):
+                do_need_show=False):
     xs, ys, size = read_FHN_coords_tr(pathFHN)
 
     plt.plot(xs, ys)
@@ -632,7 +632,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     s.highAccuracy = high_accuracy_
     k_systems = s.k_systems
 
-    xs, ys, ts = solve_and_plot_with_IC(IC, path_graph_x_start, path_graph_x_end, do_need_show)
+    xs, ys, ts = solve_and_plot_with_IC(IC, path_graph_x_start, path_graph_x_end, do_need_show = False)
 
     # Выбираем eq1 в качестве первого элемента, найдем период его колебаний
     # Трехмерный массив - 1) Номер нейрона; 2) Информация:
@@ -684,9 +684,13 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     k_systems -= len(depressed_elements)
     # 2) пересчитываем inform_about_maximums
     inform_about_maximums = []
-    for i in range(0, len(xs_no_depressed)):
-        inform_about_maximums.append(find_maximums(xs_no_depressed[i], ts))
-
+    for xs_nd in xs_no_depressed:  
+        # print(xs_nd)
+        # plt.plot(ts, xs_nd)
+        # plt.xlim(0, 100)
+        # plt.show()
+        # plt.close()
+        inform_about_maximums.append(find_maximums(xs_nd, ts))
 
     delay = []
     R1_arr = []
@@ -716,7 +720,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         delay.append(delay_in_for)
 
         # Находим параметр порядка
-        R1, R2 = find_order_param(period, delay_in_for)
+        R1, R2 = find_order_param(period, delay_in_for, k_systems)
         R1_arr.append(R1)
         R2_arr.append(R2)
         J_arr.append(j)
