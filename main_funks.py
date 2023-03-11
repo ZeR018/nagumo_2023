@@ -82,7 +82,7 @@ def solve(initial_conditions):
         z1s.append(sol.y[i * k + 2])
 
     print('g_inh: ', G_inh, '\t solve time: ', time.time() - start_time)
-    return xs, ys, ts
+    return xs, ys, z1s, ts
 
 
 def find_maximums(X, t):
@@ -134,6 +134,7 @@ def lag_between_neurons(main_t, main_i, other_t, other_i, period, index=3):
         print('Опять сломалось')
 
         print(len(main_t), len(other_t))
+        print(main_t)
         print(other_t)
         print(other_t[index], main_t[index])
 
@@ -147,6 +148,7 @@ def find_order_param(period, delays, k_systems_):
     sum_im = 0.0
     sum_re2 = 0.0
     sum_im2 = 0.0
+
     for i in range(0, k_systems_ - 1):
         in_exp = 2 * np.pi * delays[i] / period
         in_exp2 = 4 * np.pi * delays[i] / period
@@ -161,8 +163,8 @@ def find_order_param(period, delays, k_systems_):
     sum_re2 += 1.0
     sum = np.sqrt(sum_re ** 2 + sum_im ** 2)
     sum2 = np.sqrt(sum_re2 ** 2 + sum_im2 ** 2)
-    r2 = sum2 / k_systems
-    r = sum / k_systems
+    r2 = sum2 / k_systems_
+    r = sum / k_systems_
     return r, r2
 
 
@@ -203,14 +205,20 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
     # Нужно ли делать принт НУ?
     if do_need_show:
         showInitialConditions(IC)
-    xs, ys, ts = solve(IC)
+    xs, ys, z1s, ts = solve(IC)
 
     # Нужно сделать так, чтобы при tMax > 200 рисовалось только последняя часть последовательности
     if (tMax > 200):
         if s.highAccuracy:
-            new_len = 12000
+            if s.k_systems > 5:
+                new_len = 6000
+            else:
+                new_len = 12000
         else:
-            new_len = 3000
+            if s.k_systems > 5:
+                new_len = 1500
+            else:
+                new_len = 3000
         short_xs_end = []
         short_ts_end = []
         short_xs_start = []
@@ -275,7 +283,7 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
     # plt.grid()
     # plt.show()
 
-    return xs, ys, ts
+    return xs, ys, z1s, ts
 
 
 def recordICAndR(filename, R, IC, G_inh_arr, size):
@@ -632,7 +640,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     s.highAccuracy = high_accuracy_
     k_systems = s.k_systems
 
-    xs, ys, ts = solve_and_plot_with_IC(IC, path_graph_x_start, path_graph_x_end, do_need_show = False)
+    xs, ys, z1s, ts = solve_and_plot_with_IC(IC, path_graph_x_start, path_graph_x_end, do_need_show = False)
 
     # Выбираем eq1 в качестве первого элемента, найдем период его колебаний
     # Трехмерный массив - 1) Номер нейрона; 2) Информация:
@@ -697,7 +705,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     R2_arr = []
     J_arr = []
     period = 0
-    for j in range(10, len(inform_about_maximums[0][2]) - 2):
+    for j in range(10, len(inform_about_maximums[0][2]) - 15):
         delay_in_for = []
         delay_t = []
         for i in range(1, k_systems):
@@ -711,12 +719,13 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
             delay_t.append(d_t)
 
         for i in range(0, k_systems - 1):
-            if abs(delay_in_for[i]) > period:
-                if delay_in_for[i] > period:
-                    delay_in_for[i] -= period
-                elif delay_in_for[i] < period:
-                    delay_in_for[i] += period
-                i = 0
+            # if abs(delay_in_for[i]) > period:
+            #     if delay_in_for[i] > period:
+            #         delay_in_for[i] -= period
+            #     elif delay_in_for[i] < period:
+            #         delay_in_for[i] += period
+            #     i = 0
+            delay_in_for[i] = delay_in_for[i] % period
         delay.append(delay_in_for)
 
         # Находим параметр порядка
@@ -724,7 +733,6 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         R1_arr.append(R1)
         R2_arr.append(R2)
         J_arr.append(j)
-
     # Классификация не рабочая
     #osc_type = classification(period, delay[-1])
     # if do_need_show:
@@ -734,11 +742,12 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
 
     # Графики параметров порядка
     plt.figure()
-    plt.plot(J_arr, R1_arr, label='R1')
-    plt.plot(J_arr, R2_arr, label='R2')
-    plt.title('Зависимость R1, R2 при G_inh = ' + str(G_inh))
-    plt.xlabel('k')
-    plt.ylabel('R1, R2')
+    plt.plot(J_arr, R1_arr, label='R\u2081')
+    plt.plot(J_arr, R2_arr, label='R\u2082')
+    plt.title('Зависимость R\u2081, R\u2082 при G_inh = ' + str(G_inh))
+    plt.xlabel('k - k-й номер максимума')
+    plt.ylabel('R\u2081, R\u2082')
+    plt.ylim(-0.05, 1.05)
     plt.legend()
     plt.grid()
 
@@ -755,7 +764,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     for i in range(k_systems):
         last_state.append(xs[i][-1])
         last_state.append(ys[i][-1])
-        last_state.append(s.z1_IC)
+        last_state.append(z1s[i][-1])
 
     if path_graph_last_state != 0:
         plot_last_coords_unit_circle(delay[-1], period, path_graph_last_state)

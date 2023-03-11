@@ -14,8 +14,8 @@ highAccuracy = false
 z1_IC = 0.01
 z2_IC = 0
 
-tMax1 = 10000
-tMax2 = 5000
+tMax1 = 35000
+tMax2 = 10000
 tMax3 = 3000
 
 plot_styles = [
@@ -76,12 +76,19 @@ pathIC = "./Data/graphics/IC.png"
 path_LS = "./Data/graphics/finalState"
 FHN_tr_path = "./Data/FHN_coords.txt"
 pathIC_test = "./Data/graphics/savedIC_test.png"
-path_Doc = "./Data/results/R_depend_Ginh_pos_10.docx"
+path_Doc = "./Data/results/R_dep_Ginh_protyazh_6_3.docx"
+# path_Doc = "./Data/results/test.docx"
 
 #for graph R(G_inh) funk
-G_inh_sign = 1 # -1 связь отрицательная, 1 положительная
+G_inh_sign = -1 # -1 связь отрицательная, 1 положительная
 dist_between_neurons_IC = 1
-graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pos_10.png'
-k_systems = 10   # num systems
-n_streams = 1
+graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pr_6_3.png'
+k_systems = 6   # num systems
+n_streams = 10
 
+# Написать программу, которая создает временный файл с уже посчитанными последними R12
+# Для того чтобы можно было не начинать каждый раз эксперименты заново, а продолжать
+# Сделать флаг - при начале эксперимента и каких-то результатах - надо ли продолжать начатый эксперимент
+# делать его True, если эксперимент полностью завершился False
+
+# протяжка отработала некорректно - не берет последние НУ в качестве следующих!
