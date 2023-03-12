@@ -13,6 +13,7 @@ def ex_Ginh_f(index, IC, do_need_show=False):
     path_x_start = s.Graphic_data_path + '_x' + str(index) + '.png'
     path_x_end = s.Graphic_data_path + '_x' + str(index) + '_end.png'
     path_R = s.Graphic_data_path + '_R' + str(index) + '.png'
+    path_graph_last_state = s.Graphic_data_path + '_lsFHN_' + str(index - 80) + '.png'
 
     G_inh = s.G_inh_sign * index / 1000.0
     #G_inh = -0.045
@@ -53,7 +54,7 @@ def ex_Ginh_f(index, IC, do_need_show=False):
         make_experiment(G_inh, IC, tMax, s.highAccuracy, path_graph_x_start=path_x_start, path_graph_x_end=path_x_end,
                         path_graph_R=path_R, do_need_show=do_need_show)
 
-    return R1_arr, R2_arr, IC, path_x_start, path_x_end, path_R, G_inh, depressed_elements, last_state
+    return R1_arr, R2_arr, IC, path_x_start, path_x_end, path_R, G_inh, depressed_elements, last_state, path_graph_last_state
 
 def make_R12_dep_G_inh_experiment():
     # Инициализируем
@@ -183,10 +184,11 @@ def make_protyazhka_R12_dep_G_inh():
     mydoc.add_picture(s.pathIC)
     mydoc.add_page_break()
 
-    for i in range(0, 80):
+    for i in range(-80, 80):
         loop_index = i + 1
-        print(loop_index)
-        result = ex_Ginh_f(loop_index, IC, False)
+        if loop_index >= 0:
+            s.G_inh_sign = 1
+        result = ex_Ginh_f(abs(loop_index), IC, False)
         R1_arr_i = result[0]
         R2_arr_i = result[1]
         IC_i = result[2]
@@ -196,26 +198,19 @@ def make_protyazhka_R12_dep_G_inh():
         G_inh_i = result[6]
         depressed_elements_i = result[7]
         last_state_i = result[8]
+        path_graph_last_state = result[9]
             
+        # Запись в файл. Docx
         mydoc.add_heading('Experiment ' + str(loop_index), 1)
         mydoc.add_picture(path_x_start, width=docx.shared.Inches(6.5))
         mydoc.add_picture(path_x_end, width=docx.shared.Inches(6.5))
-        mydoc.add_picture(path_R, width=docx.shared.Inches(5))
-        
-        # Запись в файл. Docx
-        # Запись начальных условий на каждом эксперименте
-        mydoc.add_heading("Initial conditions:", 2)
-        for j in range(0, s.k_systems):
-            mydoc.add_paragraph(str(IC_i[j * s.k]) + ', ' + str(IC_i[j * s.k + 1]) + ', ' +
-                                str(IC_i[j * s.k + 2]) + ', ')
+        mydoc.add_picture(path_R, width=docx.shared.Inches(4))
 
-        # Конечное состояние записываем
-        mydoc.add_heading("Last state:", 2)
-        for j in range(0, s.k_systems):
-            mydoc.add_paragraph(str(last_state_i[j * s.k]) + ', ' + str(last_state_i[j * s.k + 1]) + ', ' +
-                                str(last_state_i[j * s.k + 2]) + ', ')
+        # Рисуем конечное состояние на единичной окружности
+        mydoc.add_picture(path_graph_last_state, width=docx.shared.Inches(4))
         mydoc.add_page_break()
 
+        # Сохраняем в док результатов всё что сделали
         mydoc.save(s.path_Doc)
 
         # Последние элементы массива R1, R2
@@ -225,8 +220,8 @@ def make_protyazhka_R12_dep_G_inh():
 
         if len(depressed_elements_i) != 0:
             print('depressed', depressed_elements_i)
-            i = 8
-            break
+            # i = 8
+            # break
 
         # Делаем начальное состояние следующего эксперемента как конечное состояние предыдущего
         IC = last_state_i
@@ -240,7 +235,6 @@ def make_protyazhka_R12_dep_G_inh():
     plt.title('Зависимость R\u2081, R\u2082 от G_inh, ' + str(s.k_systems) + ' элементов')
     plt.legend()
     plt.grid()
-
     plt.ylim(-0.05, 1.05)
     if s.G_inh_sign < 0:
         plt.xlim(-0.09, 0.01)
@@ -248,6 +242,7 @@ def make_protyazhka_R12_dep_G_inh():
         plt.xlim(-0.01, 0.09)
     plt.savefig(s.graph_R_Ginh_path)
     plt.show()
+
     # Добавляем этот график в док
     mydoc.add_heading('Final graph', 1)
     mydoc.add_picture(s.graph_R_Ginh_path, width=docx.shared.Inches(5))

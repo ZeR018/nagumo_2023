@@ -626,6 +626,16 @@ def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
 
     return generate_your_IC_FHN(IC_ind_arr, do_need_show=do_need_show)
 
+
+def write_R12_last(R1_arr, R2_arr, G_inh_arr, filename = s.R12_last_path):
+    f = open(filename, )
+    try:
+        for i in range(len(R1_arr)):
+            f.write(str(G_inh_arr[i]) + ',' + str(R1_arr[i]) + ',' + str(R2_arr[i]) + '\n')
+        return 0
+    except:
+        ValueError
+
 ################################################### make function ######################################################
 
 

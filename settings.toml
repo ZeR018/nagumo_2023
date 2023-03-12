@@ -74,15 +74,16 @@ save_IC_data_path = "/Data/initial_conditions/"
 Graphic_data_path = "./Data/graphics/fig"
 pathIC = "./Data/graphics/IC.png"
 path_LS = "./Data/graphics/finalState"
-FHN_tr_path = "./Data/FHN_coords.txt"
+FHN_tr_path = "./Data/temp/FHN_coords.txt"
 pathIC_test = "./Data/graphics/savedIC_test.png"
-path_Doc = "./Data/results/R_dep_Ginh_protyazh_6_3.docx"
+path_Doc = "./Data/results/R_Ginh_pr_full_6.docx"
+R12_last_path = "./Data/temp/r12_last.txt"
 # path_Doc = "./Data/results/test.docx"
 
 #for graph R(G_inh) funk
 G_inh_sign = -1 # -1 связь отрицательная, 1 положительная
 dist_between_neurons_IC = 1
-graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pr_6_3.png'
+graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pr_full_6.png'
 k_systems = 6   # num systems
 n_streams = 10
 
