@@ -57,7 +57,6 @@ plot_colors = [
     "red",
     "indigo",
     "m",
-    "yellow",
     "purple",
     "gray",
     "olive",
@@ -76,20 +75,34 @@ pathIC = "./Data/graphics/IC.png"
 path_LS = "./Data/graphics/finalState"
 FHN_tr_path = "./Data/temp/FHN_coords.txt"
 pathIC_test = "./Data/graphics/savedIC_test.png"
-path_Doc = "./Data/results/R_Ginh_pr_full_6.docx"
-R12_last_path = "./Data/temp/r12_last.txt"
-# path_Doc = "./Data/results/test.docx"
+
+# default data paths
+path_Doc_default = "./Data/results/R_Ginh"
+R12_last_path_default = "./Data/temp/r12_last"
+graph_R_Ginh_path_default = './Data/graphics/res_graphs/saved_fig_R_Ginh'
 
 #for graph R(G_inh) funk
+
+# Автоматически настраиваемые
+path_Doc = "./Data/results/R_Ginh"
+#path_Doc = "./Data/results/test.docx"
+R12_last_path = "./Data/temp/r12_last"
+graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh'
+#graph_R_Ginh_path = './Data/graphics/res_graphs/test.png'
+
+# Настраиваемые
+IC_type = 'prot'
 G_inh_sign = -1 # -1 связь отрицательная, 1 положительная
 dist_between_neurons_IC = 1
-graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pr_full_6.png'
-k_systems = 6   # num systems
+k_systems = 11   # num systems
 n_streams = 10
+
+# Добавить возможность при генерации файлов создавать "мини-модификаторы"
+# по типу "long", которые будут идти после числа элементов в коде названия дока
+
 
 # Написать программу, которая создает временный файл с уже посчитанными последними R12
 # Для того чтобы можно было не начинать каждый раз эксперименты заново, а продолжать
 # Сделать флаг - при начале эксперимента и каких-то результатах - надо ли продолжать начатый эксперимент
 # делать его True, если эксперимент полностью завершился False
 
-# протяжка отработала некорректно - не берет последние НУ в качестве следующих!

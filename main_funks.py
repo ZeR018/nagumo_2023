@@ -183,7 +183,7 @@ def IC_random_generator(a, b):
 
 
 # print начальные условия
-def showInitialConditions(IC, name='0'):
+def showInitialConditions(IC, k_systems=s.k_systems, name='0'):
     if name == '0':
         print('Initial conditions')
     else:
@@ -492,7 +492,7 @@ def plot_IC_unit_circle(IC, pathIC=0):
 
 
 # plot итогового состояния на единичной окружности
-def plot_last_coords_unit_circle(delays, period, path_coords=0, do_need_show=False):
+def plot_last_coords_unit_circle(delays, period, path_coords=0, do_need_show=False, k_systems=s.k_systems):
 
     fig, ax = plt.subplots(figsize=(5, 5))
     draw_circle = plt.Circle((0, 0), 1, fill=False)
@@ -627,8 +627,8 @@ def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
     return generate_your_IC_FHN(IC_ind_arr, do_need_show=do_need_show)
 
 
-def write_R12_last(R1_arr, R2_arr, G_inh_arr, filename = s.R12_last_path):
-    f = open(filename, )
+def write_R12_last(G_inh_arr, R1_arr, R2_arr, file_name = s.R12_last_path):
+    f = open(file_name, 'w')
     try:
         for i in range(len(R1_arr)):
             f.write(str(G_inh_arr[i]) + ',' + str(R1_arr[i]) + ',' + str(R2_arr[i]) + '\n')
@@ -636,8 +636,103 @@ def write_R12_last(R1_arr, R2_arr, G_inh_arr, filename = s.R12_last_path):
     except:
         ValueError
 
-################################################### make function ######################################################
 
+def read_file_G_dep_R12(file_name = s.R12_last_path):
+    G_inh_arr = []
+    R1_arr = []
+    R2_arr = []
+
+    f  = open(file_name, 'r')
+    for line in f:
+        l = line.split(',')
+        G_inh_arr.append(float(l[0]))
+        R1_arr.append(float(l[1]))
+        R2_arr.append(float(l[2]))
+
+    return G_inh_arr, R1_arr, R2_arr
+
+
+def draw_R_dep_G(G_inh_arr, R1_arr, R2_arr, G_inh_arr_r = [], R1_arr_r = [], R2_arr_r = [], path=s.graph_R_Ginh_path, 
+                 modifier='', do_need_show=False):
+    plt.figure()
+    plt.xlabel('G_inh')
+    plt.ylabel('R\u2081, R\u2082')
+    plt.title('Зависимость R\u2081, R\u2082 от G_inh, ' + str(s.k_systems) + ' элементов')
+    plt.grid()
+    plt.ylim(-0.05, 1.05)
+    
+    if R1_arr_r != [] and R2_arr_r != []:   
+        plt.plot(G_inh_arr, R1_arr, label='R\u2081_left', color='b')
+        plt.plot(G_inh_arr, R2_arr, label='R\u2082_left', color='orange')
+    
+        plt.plot(G_inh_arr_r, R1_arr_r, label='R\u2081_right', color='g')
+        plt.plot(G_inh_arr_r, R2_arr_r, label='R\u2082_right', color='r')
+
+        plt.xlim(-0.09, 0.09)
+        plt.savefig(path)
+        plt.legend()
+
+        if do_need_show:
+            plt.show()
+        return 0
+    
+    plt.plot(G_inh_arr, R1_arr, label='R\u2081')
+    plt.plot(G_inh_arr, R2_arr, label='R\u2082')
+
+    if modifier == 'pr_full':
+        print('full')
+        plt.xlim(-0.09, 0.09)
+    else:
+        if s.G_inh_sign == -1:
+            plt.xlim(-0.09, 0.01)
+        else:
+            plt.xlim(-0.01, 0.09)
+
+    plt.legend()
+    plt.savefig(path)
+    if do_need_show:
+        plt.show()
+
+    
+    return 0
+        
+
+# Сверяет, есть ли такое имя существуещего файла, если да, добавляет/меняет
+# циферку в конце
+def find_new_name_to_file(file_name, k_systems, type='txt', modifier='', small_modifier=''):
+    if modifier != '':
+        new_path = file_name + '_' + modifier + '_' + str(k_systems)
+    else:
+        new_path = file_name + '_' + str(k_systems)
+
+    if small_modifier !='':
+        new_path += '_' + small_modifier + '_0'
+    else:
+        new_path += '_0'
+    i = 0
+    while exists(new_path + '.' + type):
+        i += 1
+        new_path = new_path[:- (len(str(i-1)) + 1)] + '_' + str(i) 
+
+    return new_path + '.' + type
+
+
+# Функция для генерирования имен/путей для R12(G_inh)
+def generate_file_names_R12_Ginh(modifier = '', small_modifier = ''):
+    k_systems = s.k_systems
+
+    s.R12_last_path = find_new_name_to_file(s.R12_last_path_default, k_systems, 'txt', modifier, small_modifier)
+    s.path_Doc = find_new_name_to_file(s.path_Doc_default, k_systems,  'docx', modifier, small_modifier)
+    s.graph_R_Ginh_path = find_new_name_to_file(s.graph_R_Ginh_path_default, k_systems, 'png', modifier, small_modifier)
+
+    # s.R12_last_path = new_path + '.txt'
+
+    # s.path_Doc = "./Data/results/test.docx"
+    # s.graph_R_Ginh_path = './Data/graphics/res_graphs/test.png'
+    #graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh_pr_full_6_r.png'
+
+
+################################################### make function ######################################################
 
 def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=0, path_graph_x_end=0,
                     path_graph_R=0, path_graph_last_state=0, do_need_show=False):
@@ -769,6 +864,12 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         plt.show()
         plt.close()
 
+    # Рисуем конесное состояние системы на единичной окружности
+    if path_graph_last_state != 0:
+        plot_last_coords_unit_circle(delay[-1], period, path_graph_last_state, k_systems=k_systems)
+    plt.close()
+    
+    k_systems = s.k_systems
     # Необходимо сохранить конечное состояние системы для вывода конечного графика
     last_state = []
     for i in range(k_systems):
@@ -776,23 +877,4 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         last_state.append(ys[i][-1])
         last_state.append(z1s[i][-1])
 
-    if path_graph_last_state != 0:
-        plot_last_coords_unit_circle(delay[-1], period, path_graph_last_state)
-    plt.close()
-    # Попытка показать весь график
-    # margins = {  # +++
-    #     "left": 0.020,
-    #     "bottom": 0.060,
-    #     "right": 0.990,
-    #     "top": 0.990
-    # }
-    # plt.figure(figsize=(25, 5))
-    # plt.subplots_adjust(**margins)
-    # for i in range(len(xs)):
-    #     plt.plot(ts, xs[i], label=('eq' + str(i + 1)), linestyle=plot_styles[i], color=plot_colors[i])
-    #     plt.legend()
-    # plt.grid()
-    #
-    # plt.show()
-    k_systems = k_systems_with_depressed
     return R1_arr, R2_arr, IC, depressed_elements, last_state
