@@ -42,6 +42,8 @@ def ex_Ginh_f(index, IC, divider, do_need_show=False):
         else:
             tMax = s.tMax3
     else:
+        if s.G_inh_sign == 0:
+            tMax = 1000
         if G_inh <= s.G_inh_sign * 0.001:
             tMax = s.tMax1
         elif G_inh <= s.G_inh_sign * 0.002:
@@ -352,5 +354,6 @@ def make_protyazhka_R12_dep_G_inh(start, stop, step, divider=1000):
 
 #make_protyazhka_R12_dep_G_inh(10, 12, 1)
 
-make_protyazhka_R12_dep_G_inh_full(-47, -80, -1, 1000)
+# make_protyazhka_R12_dep_G_inh_full(69, -80, -1, 1000)
+make_protyazhka_R12_dep_G_inh_full(-79, 70, 1, 1000)
 # Посмотреть на резкий переход к режиму (4,2) для отрицательной связи и 6 элементов

@@ -611,6 +611,18 @@ def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
     right_elems = 339
     IC_ind_arr = []
 
+    
+    if type == 'unbalanced prot':
+        if s.k_systems % 2 == 0:
+            type = 'prot'
+
+        else:
+            for i in range(0, s.k_systems):
+                if i % 2 == 0:
+                    IC_ind_arr.append(left_elems - dist_between_neurons * k2 // 2 + dist_between_neurons * i//2)
+                else:
+                    IC_ind_arr.append(right_elems - dist_between_neurons * k2 // 2 + dist_between_neurons * i)
+
     if type == 'prot':
         k2 = s.k_systems // 2
         for i in range(0, k2):
@@ -619,10 +631,10 @@ def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
 
         if s.k_systems % 2 == 1:
             IC_ind_arr.append((right_elems - left_elems) // 2)
-
-    else:
+    elif type == 'full':
         for i in range(0, s.k_systems):
             IC_ind_arr.append(left_elems - dist_between_neurons * s.k_systems // 2 + dist_between_neurons * i)
+    
 
     return generate_your_IC_FHN(IC_ind_arr, do_need_show=do_need_show)
 
@@ -735,7 +747,7 @@ def generate_file_names_R12_Ginh(modifier = '', small_modifier = ''):
 ################################################### make function ######################################################
 
 def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=0, path_graph_x_end=0,
-                    path_graph_R=0, path_graph_last_state=0, do_need_show=False):
+                    path_graph_R=0, path_graph_last_state=0, do_need_show=False, do_need_xyzt=False):
     # Две глобальные переменные, которые могут и будут меняться в экспериментах в рамках одного запуска программы
     global tMax, G_inh
     G_inh = G_inh_
@@ -876,5 +888,8 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         last_state.append(xs[i][-1])
         last_state.append(ys[i][-1])
         last_state.append(z1s[i][-1])
+
+    if do_need_xyzt:
+        return R1_arr, R2_arr, IC, depressed_elements, last_state, [xs, ys, z1s, ts]
 
     return R1_arr, R2_arr, IC, depressed_elements, last_state
