@@ -354,6 +354,7 @@ def make_protyazhka_R12_dep_G_inh(start, stop, step, divider=1000):
 
 #make_protyazhka_R12_dep_G_inh(10, 12, 1)
 
-# make_protyazhka_R12_dep_G_inh_full(69, -80, -1, 1000)
-make_protyazhka_R12_dep_G_inh_full(-79, 70, 1, 1000)
+make_protyazhka_R12_dep_G_inh_full(-1, -60, -1, 1000)
+
+# Попробовать запустить для 11 элементов на большем времени (tMax3 = 5000)
 # Посмотреть на резкий переход к режиму (4,2) для отрицательной связи и 6 элементов

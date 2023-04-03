@@ -60,9 +60,11 @@ def naguma_systems(t, r):
 
     return res_arr
 
-
+from datetime import datetime
 def solve(initial_conditions):
     global G_inh, tMax
+    global k_systems
+    k_systems = s.k_systems
 
     start_time = time.time()
     sol = 0
@@ -81,7 +83,7 @@ def solve(initial_conditions):
         ys.append(sol.y[i * k + 1])
         z1s.append(sol.y[i * k + 2])
 
-    print('g_inh: ', G_inh, '\t solve time: ', time.time() - start_time)
+    print('g_inh: ', G_inh, '\t solve time: ', time.time() - start_time, '\t time: ', datetime.now().time())
     return xs, ys, z1s, ts
 
 
@@ -540,7 +542,7 @@ def generate_your_IC_FHN(arr_indexes_IC, pathIC=0, do_need_show=False):
 
     IC = []
     plt.plot(xs, ys)
-    for i in range(k_systems):
+    for i in range(s.k_systems):
         x = xs[arr_indexes_IC[i]]
         y = ys[arr_indexes_IC[i]]
         plt.scatter(x, y, 200, label=str(i+1), marker=s.scatter_markers[i])
@@ -611,7 +613,6 @@ def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
     right_elems = 339
     IC_ind_arr = []
 
-    
     if type == 'unbalanced prot':
         if s.k_systems % 2 == 0:
             type = 'prot'
@@ -635,7 +636,6 @@ def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
         for i in range(0, s.k_systems):
             IC_ind_arr.append(left_elems - dist_between_neurons * s.k_systems // 2 + dist_between_neurons * i)
     
-
     return generate_your_IC_FHN(IC_ind_arr, do_need_show=do_need_show)
 
 
