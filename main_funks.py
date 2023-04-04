@@ -245,6 +245,7 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
         plt.xlabel('t')
         plt.ylabel('x')
         plt.title('Осцилограмма x(t) на первых ' + str(new_len) + ' точках')
+        plt.ylim(-2.1, 2.1)
         plt.grid()
         # Если передан путь, сохранить график
         if (path_graph_x_start != 0):
@@ -263,6 +264,7 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
             plt.legend()
         plt.xlabel('t')
         plt.ylabel('x')
+        plt.ylim(-2.1, 2.1)
         plt.title('Осцилограмма x(t) на последних ' + str(new_len) + ' точках')
         plt.grid()
 
