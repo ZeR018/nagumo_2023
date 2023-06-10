@@ -16,7 +16,7 @@ z2_IC = 0
 
 tMax1 = 35000
 tMax2 = 10000
-tMax3 = 8000
+tMax3 = 5000
 
 plot_styles = [
     "--",
@@ -102,7 +102,7 @@ graph_R_Ginh_path = './Data/graphics/res_graphs/saved_fig_R_Ginh'
 IC_type = 'prot'
 G_inh_sign = -1 # -1 связь отрицательная, 1 положительная
 dist_between_neurons_IC = 1
-k_systems = 11   # num systems
+k_systems = 8   # num systems
 n_streams = 10
 
 

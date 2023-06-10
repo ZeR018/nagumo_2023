@@ -169,8 +169,14 @@ def find_order_param(period, delays, k_systems_):
     r = sum / k_systems_
     return r, r2
 
+def find_phases_difference(period, delays, k_systems_):
+    phi = []
+    for i in range(0, k_systems_ - 1):
+        phi_i = 2 * np.pi * delays[i] / period
+        phi.append(phi_i)
+    return phi
 
-def IC_random_generator(a, b):
+def IC_random_generator(a, b, pathSave='0', pathFHN=s.FHN_tr_path):
     random_var = []
     for i in range(0, 2 * k_systems):
         random_var.append(uniform(a, b))
@@ -181,6 +187,17 @@ def IC_random_generator(a, b):
         IC_arr.append(random_var[i])
         IC_arr.append(random_var[i+1])
         IC_arr.append(s.z1_IC)
+
+    if pathSave != '0':
+        xs, ys, size = read_FHN_coords_tr(pathFHN)
+
+        plt.plot(xs, ys)
+        for i in range(k_systems):
+            plt.scatter(IC_arr[i*k], IC_arr[i*k+1])
+        plt.grid()
+        plt.savefig(pathSave)
+
+
     return np.array(IC_arr)
 
 
@@ -616,6 +633,7 @@ def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
     IC_ind_arr = []
 
     if type == 'unbalanced prot':
+        k2 = s.k_systems // 2
         if s.k_systems % 2 == 0:
             type = 'prot'
 
@@ -634,6 +652,19 @@ def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
 
         if s.k_systems % 2 == 1:
             IC_ind_arr.append((right_elems - left_elems) // 2)
+
+    elif type == 'sol state':
+        IC_ind_arr.append(right_elems)
+        for i in range(s.k_systems - 1):
+            IC_ind_arr.append(left_elems - dist_between_neurons * s.k_systems // 2 + dist_between_neurons * i)
+    
+    elif type == 'sol state2':
+        IC_ind_arr.append(right_elems)
+        for i in range(s.k_systems - 1):
+            IC_ind_arr.append(left_elems)
+    
+
+
     elif type == 'full':
         for i in range(0, s.k_systems):
             IC_ind_arr.append(left_elems - dist_between_neurons * s.k_systems // 2 + dist_between_neurons * i)
@@ -749,7 +780,7 @@ def generate_file_names_R12_Ginh(modifier = '', small_modifier = ''):
 ################################################### make function ######################################################
 
 def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=0, path_graph_x_end=0,
-                    path_graph_R=0, path_graph_last_state=0, do_need_show=False, do_need_xyzt=False):
+                    path_graph_R=0, path_graph_last_state=0, path_graph_phi=0, do_need_show=False, do_need_xyzt=False):
     # Две глобальные переменные, которые могут и будут меняться в экспериментах в рамках одного запуска программы
     global tMax, G_inh
     G_inh = G_inh_
@@ -823,6 +854,8 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     R1_arr = []
     R2_arr = []
     J_arr = []
+    # phi_arr - двойной массив размером k(максимумов) * (k_systems-1)
+    phi_arr = []
     period = 0
     for j in range(10, len(inform_about_maximums[0][2]) - 15):
         delay_in_for = []
@@ -852,12 +885,15 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         R1_arr.append(R1)
         R2_arr.append(R2)
         J_arr.append(j)
-    # Классификация не рабочая
-    #osc_type = classification(period, delay[-1])
-    # if do_need_show:
-    #     print('delays:', delay[-1], 'T:', period, 'T/4: ', period / 4.0, 'T/2: ', period / 2.0, '3T/4: ',
-    #         3.0 * period / 4.0)
-        #print('type: ' + osc_type)
+
+        # Находим разности фаз относительно первого элемента
+        phi_k = find_phases_difference(period, delay_in_for, k_systems)
+        phi_arr.append(phi_k)
+
+    # Транспонируем матрицу разностей фаз и рисуем графики
+    phi_arr = np.array(phi_arr)
+    phi_arr = phi_arr.T
+    
 
     # Графики параметров порядка
     plt.figure()
@@ -865,7 +901,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     plt.plot(J_arr, R2_arr, label='R\u2082')
     plt.title('Зависимость R\u2081, R\u2082 при G_inh = ' + str(G_inh))
     plt.xlabel('k - k-й номер максимума')
-    plt.ylabel('R\u2081, R\u2082')
+    plt.ylabel('R\u2081, R\u2082') 
     plt.ylim(-0.05, 1.05)
     plt.legend()
     plt.grid()
@@ -876,6 +912,22 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     # Надо ли показывать график
     if do_need_show:
         plt.show()
+        plt.close()
+
+    if path_graph_phi:
+        plt.figure()
+        for i in range(len(phi_arr)):
+            for j in range(len(phi_arr[0])):
+                if phi_arr[i][j] > np.pi:
+                    phi_arr[i][j] = phi_arr[i][j] - 2*np.pi
+            plt.plot(J_arr, phi_arr[i], label=('\u03C6' + str(i)))
+        plt.title('Разность фаз между первым элементом и i-м')
+        plt.xlabel('k - k-й номер максимума')
+        plt.ylabel('\u03C6')
+        plt.ylim(-np.pi, np.pi)
+        plt.legend()
+        plt.grid()
+        plt.savefig(path_graph_phi)
         plt.close()
 
     # Рисуем конесное состояние системы на единичной окружности
@@ -894,4 +946,4 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     if do_need_xyzt:
         return R1_arr, R2_arr, IC, depressed_elements, last_state, [xs, ys, z1s, ts]
 
-    return R1_arr, R2_arr, IC, depressed_elements, last_state
+    return R1_arr, R2_arr, IC, [depressed_elements, last_state, phi_arr]
