@@ -6,6 +6,7 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 from config import settings as s
+from datetime import datetime
 
 
 # Обертка для легкой работы с параллелем, основные изменения (параметр связи, пути сохранения) можно делать здесь
@@ -34,7 +35,7 @@ def ex_Ginh_f(index, IC, divider, do_need_show=False, type_taking_IC = 'rand', G
         if s.G_inh_sign < 0:
             if G_inh >= s.G_inh_sign * 0.001:
                 tMax = s.tMax1
-            elif G_inh >= s.G_inh_sign * 0.002:
+            elif G_inh >= s.G_inh_sign * 0.005:
                 tMax = s.tMax2
             else:
                 tMax = s.tMax3
@@ -43,7 +44,7 @@ def ex_Ginh_f(index, IC, divider, do_need_show=False, type_taking_IC = 'rand', G
                 tMax = 1000
             if G_inh <= s.G_inh_sign * 0.001:
                 tMax = s.tMax1
-            elif G_inh <= s.G_inh_sign * 0.002:
+            elif G_inh <= s.G_inh_sign * 0.005:
                 tMax = s.tMax2
             else:
                 tMax = s.tMax3
@@ -80,9 +81,10 @@ def make_protyazhka_R12_dep_G_inh_full(start, stop, step, divider=1000, small_mo
     R1_arr_last = []
     R2_arr_last = []
     G_inh_arr = []
+    norm_of_periods_arr = []
 
     # Делаем первые НУ (по дефолту противофазные/циклопные)
-    IC = m.generate_IC_any_sizes(dist_between_neurons=s.dist_between_neurons_IC, type=s.IC_type)
+    IC = m.generate_IC_any_sizes(dist_between_neurons=s.dist_between_neurons_IC, type=s.IC_type, params_random_generation = (-3, 3, s.pathIC))
     mem.plot_IC_FHN(IC, s.pathIC, text='Начальные условия')
 
     # Добавляем неоднородность по параметру а 
@@ -95,6 +97,7 @@ def make_protyazhka_R12_dep_G_inh_full(start, stop, step, divider=1000, small_mo
     a_paragraph = mydoc.add_paragraph('a = [')
     for a in a_arr:
         a_paragraph.add_run(str(a) + ', ')
+    a_paragraph.add_run(f']; delta = {s.delta}')
     mydoc.add_heading("Initial conditions:", 2)
     for j in range(0, s.k_systems):
         mydoc.add_paragraph(str(IC[j * s.k]) + ', ' + str(IC[j * s.k + 1]) + ', ' +
@@ -109,7 +112,7 @@ def make_protyazhka_R12_dep_G_inh_full(start, stop, step, divider=1000, small_mo
         else:
             s.G_inh_sign = -1
 
-        R, IC_i, paths, G_inh_i, other = ex_Ginh_f(abs(i), IC, divider, False, a_arr)
+        R, IC_i, paths, G_inh_i, other = ex_Ginh_f(abs(i), IC, divider, False, a = a_arr)
 
         R1_arr_i = R[0]
         R2_arr_i = R[1]
@@ -121,6 +124,7 @@ def make_protyazhka_R12_dep_G_inh_full(start, stop, step, divider=1000, small_mo
         depressed_elements_i = other[0]
         last_state_i = other[1]
         phi_arr_i = other[2]
+        mean_periods, difference_of_mean_periods = other[3]
             
         # Запись в файл. Docx
         mydoc.add_heading('Experiment ' + str(i), 1)
@@ -132,18 +136,22 @@ def make_protyazhka_R12_dep_G_inh_full(start, stop, step, divider=1000, small_mo
         mydoc.add_picture(path_graph_last_state, width=docx.shared.Inches(4))
 
         # Рисуем график phi(k)
-        mydoc.add_picture(path_graph_phi_k, width=docx.shared.Inches(6))
+        mydoc.add_picture(path_graph_phi_k, width=docx.shared.Inches(4.5))
 
         # Рисуем график изменения суммы фаз относительно первого элемента
-        phi_arr_i_T = phi_arr_i.T
-        sum_phi = []
-        for i in range(len(phi_arr_i[0])):
-            sum_phi.append(sum(phi_arr_i_T[i]))
+        # phi_arr_i_T = phi_arr_i.T
+        # sum_phi = []
+        # for i in range(len(phi_arr_i[0])):
+        #     sum_phi.append(sum(phi_arr_i_T[i]))
 
         # График сумм фаз
-        path_graph_sum_phi = s.Graphic_data_path + '_sumPhi_' + str(0) + '.png'
-        mem.draw_sum_phases(sum_phi, path_graph_sum_phi)
-        mydoc.add_picture(path_graph_sum_phi, width=docx.shared.Inches(6))
+        # path_graph_sum_phi = s.Graphic_data_path + '_sumPhi_' + str(0) + '.png'
+        # mem.draw_sum_phases(sum_phi, path_graph_sum_phi)
+        # mydoc.add_picture(path_graph_sum_phi, width=docx.shared.Inches(6))
+
+        # Записываем средние периоды
+        mydoc.add_heading(f'max(mean_periods) - min(mean_periods) {difference_of_mean_periods}', 3)
+        norm_of_periods_arr.append(difference_of_mean_periods)
 
         # Записываем подавленные элементы
         if len(depressed_elements_i) != 0:
@@ -173,9 +181,20 @@ def make_protyazhka_R12_dep_G_inh_full(start, stop, step, divider=1000, small_mo
 
     # Добавляем этот график в док
     mydoc.add_heading('Final graph', 1)
-    mydoc.add_picture(s.graph_R_Ginh_path, width=docx.shared.Inches(6))
-    mydoc.save(s.path_Doc)
+    mydoc.add_picture(s.graph_R_Ginh_path, width=docx.shared.Inches(5.5))
 
+    # График изменения нормы средних периодов от связи
+    plt.plot(G_inh_arr, norm_of_periods_arr)
+    plt.grid()
+    plt.xlabel('G_inh')
+    plt.ylabel('‖periods‖∞')
+    norm_periods_fig_path = s.Graphic_data_path + '_norm_periods.png'
+    plt.savefig(norm_periods_fig_path)
+    plt.close()
+    mydoc.add_picture(norm_periods_fig_path, width=docx.shared.Inches(5.5))
+
+
+    mydoc.save(s.path_Doc)
     # Save data
     # mem.recordICAndR(R_data_path, R1_arr, IC_arr, G_inh_arr, index)
     print('Process end. Final time: ', time.time() - final_time)
@@ -198,6 +217,8 @@ def make_experiments_with_random_IC(G_inh_points_arr, n_exps_on_point = 50, type
     final_time = time.time()
 
     n_existance_cycles = n_exps_on_point // s.n_streams
+
+    print('Start experements time: ', datetime.now().time())
 
     for cycle_num, G_inh_k_exp in enumerate(G_inh_points_arr):
     
@@ -301,7 +322,6 @@ def make_experiments_with_random_IC(G_inh_points_arr, n_exps_on_point = 50, type
 
 
 #make_protyazhka_R12_dep_G_inh(10, 12, 1)
-
-
-make_protyazhka_R12_dep_G_inh_full(60, -61, -1, 1000)
+    
 make_protyazhka_R12_dep_G_inh_full(-60, 61, 1, 1000)
+make_protyazhka_R12_dep_G_inh_full(60, -61, -1, 1000)

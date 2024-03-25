@@ -24,7 +24,7 @@ k = s.k
 G_ex = s.G_ex
 
 
-def naguma_systems(t, r):
+def naguma_systems(t, r, k_systems, a_arr):
     global G_inh
 
     # For make g_ex = array(0)
@@ -50,7 +50,7 @@ def naguma_systems(t, r):
         # append fx
         res_arr.append((r[i * k] - r[i * k] ** 3 / 3.0 - r[i * k + 1] - r[i * k + 2] * (r[i * k] - V_inh) + S) / tau1)
         # append fy
-        res_arr.append(r[i * k] - b * r[i * k + 1] + a)
+        res_arr.append(r[i * k] - b * r[i * k + 1] + a_arr[i])
 
         # sum fz
         sum_Fz1 = 0.0
@@ -62,17 +62,25 @@ def naguma_systems(t, r):
     return res_arr
 
 from datetime import datetime
-def solve(initial_conditions):
+def solve(initial_conditions, a = s.a):
     global G_inh, tMax
     global k_systems
     k_systems = s.k_systems
 
+    # Делаем из а массив
+    a_arr : list
+    if isinstance(a, list) == False:
+        a_arr = [a for i in range(k_systems)]
+    else:
+        a_arr = a
+
+    # Численное интегрирование
     start_time = time.time()
     sol = 0
     if s.highAccuracy:
-        sol = solve_ivp(naguma_systems, [0, tMax], initial_conditions, rtol=1e-11, atol=1e-11)
+        sol = solve_ivp(naguma_systems, [0, tMax], initial_conditions, args=(k_systems, a_arr), rtol=1e-11, atol=1e-11)
     else:
-        sol = solve_ivp(naguma_systems, [0, tMax], initial_conditions, rtol=1e-8, atol=1e-8)
+        sol = solve_ivp(naguma_systems, [0, tMax], initial_conditions, args=(k_systems, a_arr),rtol=1e-8, atol=1e-8)
     xs = []
     ys = []
     z1s = []
@@ -101,8 +109,8 @@ def find_maximums(X, t):
     return maximums, times_of_maximums, indexes_of_maximums
 
 
-def find_period(inf):
-    max, time, index = inf
+def find_period(inform):
+    max, time, index = inform
 
     time_difference = []
     index_difference = []
@@ -114,13 +122,13 @@ def find_period(inf):
     return time_period, index_period
 
 
-def find_period_i(inf, j):
-    max, time, index = inf
+def find_period_i(inform, j):
+    max, time, index = inform
     return time[j] - time[j - 1], index[j] - index[j - 1]
 
 
 # Запаздывание между main (первым) нейроном и other(другим) на определенном шаге
-def lag_between_neurons(main_t, main_i, other_t, other_i, period, index=3):
+def lag_between_neurons(main_t, main_i, other_t, other_i, period, index=3, k_systems=k_systems, x_arr = [], t_arr = []):
     delay = 0
     delay_i = 0
     # Можно попробовать считать период на каждом шаге
@@ -135,11 +143,13 @@ def lag_between_neurons(main_t, main_i, other_t, other_i, period, index=3):
             delay_i = other_i[index] - main_i[index - 1]
     except:
         print('Опять сломалось')
+        
+        mem.draw_all_Xt_on_same_graphs(k_systems, x_arr, t_arr)
 
-        print(len(main_t), len(other_t))
-        print(main_t)
-        print(other_t)
-        print(other_t[index], main_t[index])
+        print("Len:", len(main_t), len(other_t))
+        #print("Broken indexes: ", other_t[index], main_t[index])
+        #print("Main time: ", main_t)
+        #print("Other time: ", other_t)
 
 
     return delay, delay_i
@@ -190,7 +200,7 @@ def showInitialConditions(IC, k_systems=s.k_systems, name='0'):
 
 
 # Делает solve, рисует x(t) и сохраняет начальные значения в
-def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need_show=False):
+def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need_show=False, a = s.a):
     margins = {  # +++
         "left": 0.030,
         "bottom": 0.060,
@@ -201,7 +211,7 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
     # Нужно ли делать принт НУ?
     if do_need_show:
         showInitialConditions(IC)
-    xs, ys, z1s, ts = solve(IC)
+    xs, ys, z1s, ts = solve(IC, a)
 
     # Нужно сделать так, чтобы при tMax > 200 рисовалось только последняя часть последовательности
     if (tMax > 200):
@@ -270,16 +280,17 @@ def solve_and_plot_with_IC(IC, path_graph_x_start=0, path_graph_x_end=0, do_need
             plt.show()
         plt.close()
 
-    # Полная осцилограмма
-    # plt.figure(figsize=(30, 5))
-    # for i in range(0, k_systems):
-    #     plt.plot(ts, xs[i], label=('eq' + str(i + 1)), linestyle=s.plot_styles[i])
-    #     plt.legend()
-    # plt.xlabel('t')
-    # plt.ylabel('x')
-    # plt.title('Осцилограмма x(t)')
-    # plt.grid()
-    # plt.show()
+    else:
+        # Полная осцилограмма
+        plt.figure(figsize=(30, 5))
+        for i in range(0, k_systems):
+            plt.plot(ts, xs[i], label=('eq' + str(i + 1)), linestyle=s.plot_styles[i])
+            plt.legend()
+        plt.xlabel('t')
+        plt.ylabel('x')
+        plt.title('Осцилограмма x(t)')
+        plt.grid()
+        plt.show()
 
     return xs, ys, z1s, ts
 
@@ -334,10 +345,13 @@ def generate_your_IC_FHN(arr_indexes_IC, pathIC=0, do_need_show=False):
 
 
 def generate_IC_any_sizes(dist_between_neurons=1, type='prot',
-                          do_need_show=False):
+                          do_need_show=False, params_random_generation = (-3, 3, s.pathIC)):
     left_elems = 0
     right_elems = 339
     IC_ind_arr = []
+
+    if type == 'rand':
+        return mem.IC_random_generator(params_random_generation[0], params_random_generation[1], pathSave=params_random_generation[2])
 
     if type == 'unbalanced prot':
         k2 = s.k_systems // 2
@@ -409,11 +423,11 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
     k_systems = s.k_systems
 
     # Получаем численное решение системы
-    xs, ys, z1s, ts = solve_and_plot_with_IC(IC, path_graph_x_start, path_graph_x_end, do_need_show = False)
+    xs, ys, z1s, ts = solve_and_plot_with_IC(IC, path_graph_x_start, path_graph_x_end, do_need_show = False, a = a)
 
     # Выбираем eq1 в качестве первого элемента, найдем период его колебаний
     # Трехмерный массив - 1) Номер нейрона; 2) Информация:
-    # 1 - координата максимума, 2 - время максимума, 3 - индекс максимума
+    # 0 - координата максимума, 1 - время максимума, 2 - индекс максимума
     inform_about_maximums = []
     for i in range(0, k_systems):
         inform_about_maximums.append(find_maximums(xs[i], ts))
@@ -469,6 +483,14 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         # plt.close()
         inform_about_maximums.append(find_maximums(xs_nd, ts))
 
+    # Средние периоды колебаний
+    mean_periods = []
+    for i in range (k_systems):
+        mean_periods.append(find_period(inform_about_maximums[i])[0])
+    if s.delta > 0:
+        print('Mean periods: ', mean_periods)
+    difference_of_mean_periods = max(mean_periods) - min(mean_periods)
+
     delay = []
     R1_arr = []
     R2_arr = []
@@ -485,7 +507,8 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
 
             # Находим задержки на текущем шаге
             d, d_t = lag_between_neurons(inform_about_maximums[0][1], inform_about_maximums[0][2],
-                                         inform_about_maximums[i][1], inform_about_maximums[i][2], period, j)
+                                         inform_about_maximums[i][1], inform_about_maximums[i][2], period, j,
+                                         k_systems, xs, ts)
             delay_in_for.append(d)
             delay_t.append(d_t)
 
@@ -523,7 +546,7 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
 
     # Рисуем конесное состояние системы на единичной окружности
     if path_graph_last_state != 0:
-        mem.plot_last_coords_unit_circle(G_inh, delay[-1], period, path_graph_last_state, k_systems=k_systems)
+        mem.plot_coords_unit_circle(G_inh, delay[-1], period, path_graph_last_state, k_systems=k_systems)
     plt.close()
     
     k_systems = s.k_systems
@@ -534,7 +557,10 @@ def make_experiment(G_inh_, IC, tMax_, high_accuracy_=False, path_graph_x_start=
         last_state.append(ys[i][-1])
         last_state.append(z1s[i][-1])
 
+    if s.fhn_full_animation:
+        mem.make_animation_fhn_trajectory(k_systems, xs, ys, ts)
+
     if do_need_xyzt:
         return R1_arr, R2_arr, IC, depressed_elements, last_state, [xs, ys, z1s, ts]
 
-    return R1_arr, R2_arr, IC, [depressed_elements, last_state, phi_arr]
+    return R1_arr, R2_arr, IC, [depressed_elements, last_state, phi_arr, [mean_periods, difference_of_mean_periods]]

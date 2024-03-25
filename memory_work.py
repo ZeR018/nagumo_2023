@@ -4,6 +4,8 @@ import numpy as np
 import os
 import main_funks as m
 from random import randint, uniform
+from PIL import Image
+from matplotlib.animation import ArtistAnimation
 
 
 def IC_random_generator(a, b, pathSave='0', pathFHN=s.FHN_tr_path):
@@ -26,6 +28,7 @@ def IC_random_generator(a, b, pathSave='0', pathFHN=s.FHN_tr_path):
             plt.scatter(IC_arr[i*s.k], IC_arr[i*s.k+1])
         plt.grid()
         plt.savefig(pathSave)
+    plt.close()
 
 
     return np.array(IC_arr)
@@ -220,7 +223,7 @@ def plot_IC_unit_circle(IC, pathIC=0):
     return 0
 
 # plot итогового состояния на единичной окружности
-def plot_last_coords_unit_circle(G_inh, delays, period, path_coords=0, do_need_show=False, k_systems=s.k_systems):
+def plot_coords_unit_circle(G_inh, delays, period, path_coords=0, do_need_show=False, k_systems=s.k_systems, title = 'Итоговое состояние при G_inh = '):
 
     fig, ax = plt.subplots(figsize=(5, 5))
     draw_circle = plt.Circle((0, 0), 1, fill=False)
@@ -238,9 +241,10 @@ def plot_last_coords_unit_circle(G_inh, delays, period, path_coords=0, do_need_s
 
         plt.scatter(x_i, y_i, 150, label=str(i+2), marker=s.scatter_markers[i])
 
-    ax.set_title('Итоговое состояние при G_inh=' + str(G_inh))
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
+    if title == 'Итоговое состояние при G_inh = ':
+        title += str(G_inh)
+
+    ax.set_title(title)
     ax.grid()
     ax.legend()
     ax.add_artist(draw_circle)
@@ -361,7 +365,7 @@ def draw_R_dep_G(G_inh_arr, R1_arr, R2_arr, G_inh_arr_r = [], R1_arr_r = [], R2_
     plt.savefig(path)
     if do_need_show:
         plt.show()
-
+    plt.close()
     
     return 0
 
@@ -456,3 +460,92 @@ def draw_sum_phases(sum_phi_arr, path_graph_sum_phi=0):
 
     return fig
     
+
+def draw_all_Xt_on_same_graphs(k_systems, x_arr, t_arr, path_save = s.all_graphs_save_path):
+    print('plot')
+    margins = {  # +++
+        "left": 0.030,
+        "bottom": 0.060,
+        "right": 0.995,
+        "top": 0.950
+    }
+
+    time = t_arr[-1]
+    time_i = len(t_arr)
+    new_len = 0
+    if s.highAccuracy:
+        if s.k_systems > 5:
+            new_len = 6000
+        else:
+            new_len = 12000
+    else:
+        if s.k_systems > 5:
+            new_len = 1500
+        else:
+            new_len = 3000
+
+    for i in range(int(time_i / new_len - 1)):
+        plt.figure(figsize=(15, 5))
+        plt.subplots_adjust(**margins)
+
+        for elem in range(k_systems):
+            plt.plot(t_arr[new_len * i : new_len * (i + 1)], x_arr[elem][new_len * i : new_len * (i + 1)], label=('eq' + str(elem + 1)), 
+                     linestyle=s.plot_styles[elem], color=s.plot_colors[elem])
+        plt.legend()
+        plt.xlabel('t')
+        plt.ylabel('x')
+        plt.ylim(-2.1, 2.1)
+        plt.title("Осциллограмма на промежутке " +str(round(t_arr[new_len * i], 2)) + " - " + str(round(t_arr[new_len * (i + 1)], 2)))
+        plt.savefig(path_save + '/xt/_' + str(i) + '.png')
+
+        plt.close()
+ 
+    return 0
+
+def make_graphs_unit_circle_for_gif(G_inh, delays, period, path = s.unit_circle_graphs_data_path):
+
+    for i in range(len(delays)):
+        graph_path = path + '/' + str(i) + '.png'
+        plot_coords_unit_circle(G_inh, delays[i], period, graph_path)
+
+
+    return 0
+
+def make_animation_fhn_trajectory(k_systems, x_arr, y_arr, t_arr, frames_interval = 10, gif_interval = 60, pathFHN=s.FHN_tr_path):
+
+    frames = []
+    fig = plt.figure()
+    xs, ys, size = read_FHN_coords_tr(pathFHN)
+    
+    ax = fig.add_subplot()
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_xlim(-2.1, 2.1)
+    ax.grid()
+    num_frames = 0
+    for i in range(0, len(t_arr), frames_interval):
+        frame = []
+        line, = ax.plot(xs, ys, color='blue')
+        frame.append(line)
+
+        for elem in range(k_systems):
+            point = ax.scatter(x_arr[elem][i], y_arr[elem][i], label=('eq' + str(elem + 1)), 
+                     linestyle=s.plot_styles[elem], color=s.plot_colors[elem])
+            frame.append(point)
+
+        num_frames += 1
+        frames.append(frame)
+        plt.close()
+
+    print('num frames:', num_frames)
+    gif_path = find_new_name_to_file(s.gif_data_path + '/fhn_animation', k_systems, 'gif')
+    animation = ArtistAnimation(
+                    fig,                # фигура, где отображается анимация
+                    frames,              # кадры
+                    interval=gif_interval,        # задержка между кадрами в мс
+                    blit=True,          # использовать ли двойную буферизацию
+                    repeat=False)       # зацикливать ли анимацию
+    
+    animation.save(gif_path, writer='pillow')
+
+    return 0

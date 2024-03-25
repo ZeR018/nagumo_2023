@@ -1,4 +1,4 @@
-a = 0.95
+a = 0.7
 b = 0.8
 S = 0.45
 tau1 = 0.08
@@ -14,11 +14,11 @@ highAccuracy = false
 z1_IC = 0.01
 z2_IC = 0
 
-tMax1 = 35000
+tMax1 = 25000
 tMax2 = 10000
 tMax3 = 5000
 
-delta = 0.05   # Параметр неоднородности по а
+delta = 0.005   # Параметр неоднородности по а
 
 plot_styles = [
     "--",
@@ -79,8 +79,12 @@ plot_colors = [
     "lime",
     "orchid",
 ]
+
 save_IC_data_path = "/Data/initial_conditions/"
+all_graphs_save_path = "./Data/graphics"
 Graphic_data_path = "./Data/graphics/fig"
+unit_circle_graphs_data_path = './Data/graphics/unit_circle'
+gif_data_path = './Data/gif'
 pathIC = "./Data/graphics/IC.png"
 path_LS = "./Data/graphics/finalState"
 FHN_tr_path = "./Data/temp/FHN_coords.txt"
@@ -107,4 +111,4 @@ dist_between_neurons_IC = 1
 k_systems = 11   # num systems
 n_streams = 10
 
-
+fhn_full_animation = false

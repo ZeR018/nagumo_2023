@@ -3,8 +3,7 @@ from random import uniform
 from config import settings as s
 
 def main():
-    delta = 0.05
-    a_arr = m.make_heterogeneity_a(s.a, delta)
+    a_arr = [5 for i in range(10)]
     
 
     print(a_arr)
